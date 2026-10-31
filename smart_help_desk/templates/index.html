@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Smart Help Desk</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<main class="container">
+
+    <header class="hero">
+        <p class="eyebrow">BEHAVIORAL DESIGN PATTERNS</p>
+        <h1>Smart Help Desk</h1>
+        <p>Submit, organize, and manage support tickets.</p>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <section class="messages" aria-live="polite">
+                {% for category, message in messages %}
+                    <p class="message {{ category }}">{{ message }}</p>
+                {% endfor %}
+            </section>
+        {% endif %}
+    {% endwith %}
+
+    {% if error %}
+        <p class="message error">{{ error }}</p>
+    {% endif %}
+
+    <section class="panel">
+        <h2>Create a ticket</h2>
+
+        <form action="{{ url_for('add_ticket') }}"
+              method="post"
+              class="ticket-form">
+
+            <label for="title">Title</label>
+            <input id="title"
+                   name="title"
+                   type="text"
+                   maxlength="100"
+                   required>
+
+            <label for="description">
+                Description (at least 10 characters)
+            </label>
+            <textarea id="description"
+                      name="description"
+                      rows="3"
+                      minlength="10"
+                      required></textarea>
+
+            <label for="category">Category</label>
+            <select id="category" name="category" required>
+                <option value="" selected disabled>
+                    Choose a category
+                </option>
+                <option value="IT">IT</option>
+                <option value="Account">Account</option>
+                <option value="Other">Other</option>
+            </select>
+
+            <button type="submit">Add ticket</button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <div class="list-heading">
+            <div>
+                <h2>Support tickets</h2>
+                <p class="muted">
+                    Examples: <code>status:open</code> or
+                    <code>category:IT</code>
+                </p>
+            </div>
+
+            <form action="{{ url_for('index') }}"
+                  method="get"
+                  class="filter-form">
+
+                <label for="filter">Filter</label>
+                <input id="filter"
+                       name="filter"
+                       type="text"
+                       value="{{ current_filter }}"
+                       placeholder="all / status:open">
+
+                <button type="submit" class="secondary">Apply</button>
+
+                <a class="reset-link" href="{{ url_for('index') }}">
+                    Show all
+                </a>
+            </form>
+        </div>
+
+        {% if tickets %}
+            <div class="ticket-list">
+                {% for ticket in tickets %}
+                    <article class="ticket-card">
+
+                        <div class="ticket-topline">
+                            <span class="ticket-id">
+                                Ticket #{{ ticket.id }}
+                            </span>
+
+                            <span class="status {{ ticket.status|lower }}">
+                                {{ ticket.status }}
+                            </span>
+                        </div>
+
+                        <h3>{{ ticket.title }}</h3>
+                        <p>{{ ticket.description }}</p>
+
+                        <p class="category-label">
+                            Category:
+                            <strong>{{ ticket.category }}</strong>
+                        </p>
+
+                        <div class="actions">
+                            {% if ticket.status == 'Open' %}
+                                <form
+                                    action="{{ url_for('resolve_ticket', ticket_id=ticket.id) }}"
+                                    method="post">
+
+                                    <button type="submit" class="secondary">
+                                        Mark resolved
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                            <form
+                                action="{{ url_for('delete_ticket', ticket_id=ticket.id) }}"
+                                method="post"
+                                onsubmit="return confirm('Delete this ticket?');">
+
+                                <button type="submit" class="danger">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-state">
+                No tickets match this filter.
+            </p>
+        {% endif %}
+    </section>
+
+    <footer>
+        Classroom demonstration. Data resets when the server restarts.
+    </footer>
+
+</main>
+</body>
+</html>
